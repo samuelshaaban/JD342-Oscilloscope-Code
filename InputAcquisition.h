@@ -1,3 +1,5 @@
+#pragma once
+
 #define BUFFER_LEN 10000
 class Buffer {
   private:

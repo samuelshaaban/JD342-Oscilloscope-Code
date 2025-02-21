@@ -7,15 +7,16 @@ class Buffer {
 
     int time[BUFFER_LEN]; // microseconds
     float volt[BUFFER_LEN];
-    unsigned int first;
+
+    unsigned int lastSample, lastPeak;
 
   public:
-    Buffer(): arr(), first(0) {}
+    Buffer();
     void setEnable(bool enable);
     void insert(uint16_t adcOut);
 
     bool enabled();
-    float get(int us);
+    float get(int us); // Time since beginning of most recent wave
 
 } CH1, CH2;
 

@@ -6,7 +6,7 @@
 #define BUFFER_LEN 6500
 class Buffer {
   private:
-    bool enable;
+    bool enable, change;
 
     int time[BUFFER_LEN]; // microseconds
     float volt[BUFFER_LEN];
@@ -19,6 +19,7 @@ class Buffer {
     void insert(uint16_t adcOut);
 
     bool enabled();
+    bool changed();
     float get(int us); // Time since beginning of most recent wave
 
 };
@@ -42,9 +43,10 @@ struct Trigger {
 
 // Implementations
 
-Buffer::Buffer(): enable(false), time(), volt(), lastSample(0), lastPeak(0) {}
+Buffer::Buffer(): enable(false), changed(false), time(), volt(), lastSample(0), lastPeak(0) {}
 void Buffer::setEnable(bool enable) { this->enable = enable; }
 bool Buffer::enabled() { return this->enable; }
+bool Buffer::changed() { return this->change; }
 
 void Buffer::insert(uint16_t adcOut) {}
 float Buffer::get(int us) {}

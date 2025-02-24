@@ -103,9 +103,49 @@ void SPISend(uint16_t command) {}
 void initADCRegisters() {
   while(digitalRead(READY) != LOW); // Wait for READY to go low
 
-  SPISend(SET_BIT | PROTOCOL_CFG | 0b011<<SDO_PROTOCOL); // CRT-DDR
-  SPISend(SET_BIT | BUS_WIDTH | 0b11<<SDO_WIDTH); // Quad data width
-  SPISend(SET_BIT | DATA_AVG_CFG | 0b10<<EN_DATA_AVG); // Average every 2 readings
+  //      Op-Code   Register       Value    Field -> 16-bit command line
+  SPISend(SET_BIT | PROTOCOL_CFG | 0b011 << SDO_PROTOCOL); // CRT-DDR
+  SPISend(SET_BIT | BUS_WIDTH    | 0b11  << SDO_WIDTH);    // Quad data width
+  SPISend(SET_BIT | DATA_AVG_CFG | 0b10  << EN_DATA_AVG);  // Average every 2 readings
+
+  digitalWrite(CONVST, LOW);
+}
+
+void delay15ns() {
+  for(int i = 0; i < 4; i++);
+}
+
+pulseCONVST() {
+  digitalWrite(CONVST, HIGH);
+  delay15ns();
+  digitalWrite(CONVST, LOW);
+}
+
+void CRTRead(Buffer &CH1, Buffer &CH2) {
+}
+
+bool controlsRead(DisplayAdjust &display, Trigger &trigger) {
+  bool changed = false;
+  bool enable   = digitalRead(TRIGGER_ENABLE) == LOW,
+       decrease = digitalRead(TRIGGER_DECREASE) == LOW,
+       CH2      = digitalRead(TRIGGER_CH2) == LOW;
+  
+  if(enable != trigger->enable) {
+    trigger->enable = enable;
+    changed = true;
+  }
+  if(decrease != trigger->decrease) {
+    trigger->decrease = decrease;
+    changed = true;
+  }
+  if(CH2 != trigger->CH2) {
+    trigger->CH2 = CH2;
+    changed = true;
+  }
+  
+  // Read knobs
+  
+  return changed;
 }
 
 void initInput() {
@@ -116,7 +156,18 @@ void initInput() {
 }
 
 bool acquireInput(Buffer &CH1, Buffer &CH2, DisplayAdjust &display, Trigger &trigger) {
-  return true;
+  // Check channel enable switches
+  CH1.setEnable(digitalRead(ENABLE_CH1 == LOW));
+  CH2.setEnable(digitalRead(ENABLE_CH2 == LOW));
+  
+  // Read a sample from ADC
+  pulseCONVST();
+  pulseCONVST();
+  CRTRead(CH1, CH2);
+
+  // Update other controls and return bool if graphics need to be updated.
+  if(controlsRead(display, trigger)) return true; // If controls changed, return true
+  return CH1.changed() || CH2.changed(); // Else return if jump to next cycle on one of the channels
 }
 
 #endif

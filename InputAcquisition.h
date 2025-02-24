@@ -3,7 +3,9 @@
 
 #include "DataTypes.h"
 
-void initInput();
-void acquireInput(Buffer CH1, Buffer CH2, DisplayAdjust display, Trigger trigger);
+void initInput() {}
+bool acquireInput(Buffer CH1, Buffer CH2, DisplayAdjust display, Trigger trigger) {
+  return true;
+}
 
 #endif

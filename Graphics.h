@@ -3,7 +3,7 @@
 
 #include "DataTypes.h"
 
-void initGraphics();
-void acquireGraphics(Buffer CH1, Buffer CH2, DisplayAdjust display, Trigger trigger);
+void initGraphics() {}
+void updateGraphics(Buffer CH1, Buffer CH2, DisplayAdjust display, Trigger trigger) {}
 
 #endif

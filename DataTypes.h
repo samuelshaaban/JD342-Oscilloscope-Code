@@ -43,7 +43,7 @@ struct Trigger {
 
 // Implementations
 
-Buffer::Buffer(): enable(false), changed(false), time(), volt(), lastSample(0), lastPeak(0) {}
+Buffer::Buffer(): enable(false), change(false), time(), volt(), lastSample(0), lastPeak(0) {}
 void Buffer::setEnable(bool enable) { this->enable = enable; }
 bool Buffer::enabled() { return this->enable; }
 bool Buffer::changed() { return this->change; }

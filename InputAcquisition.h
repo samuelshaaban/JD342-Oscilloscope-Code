@@ -2,6 +2,7 @@
 #define INPUT_ACQUISITION_H
 
 #include "DataTypes.h"
+#include <bitset>
 
 // ADC commands
 #define SET_BIT 0b0101<<12
@@ -165,16 +166,16 @@ bool controlsRead(DisplayAdjust &display, Trigger &trigger) {
        decrease = digitalRead(TRIGGER_DECREASE) == LOW,
        CH2      = digitalRead(TRIGGER_CH2) == LOW;
   
-  if(enable != trigger->enable) {
-    trigger->enable = enable;
+  if(enable != trigger.enable) {
+    trigger.enable = enable;
     changed = true;
   }
-  if(decrease != trigger->decrease) {
-    trigger->decrease = decrease;
+  if(decrease != trigger.decrease) {
+    trigger.decrease = decrease;
     changed = true;
   }
-  if(CH2 != trigger->CH2) {
-    trigger->CH2 = CH2;
+  if(CH2 != trigger.CH2) {
+    trigger.CH2 = CH2;
     changed = true;
   }
   

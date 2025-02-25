@@ -2,6 +2,17 @@
 #define GRAPHICS_H
 
 #include "DataTypes.h"
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7565.h>
+
+// Define SPI Pins(add numbers...)
+#define LCD_CS
+#define LCD_RST
+#define LCD_DC
+
+// Initialize ST7565 Display
+Adafruit_ST7565 display(LCD_CS, LCD_DC, LCD_RST);
 
 // initilization for graphics function
 void InitGraphics() {

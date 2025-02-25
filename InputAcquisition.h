@@ -22,7 +22,7 @@
 #define SCLK 2
 #define SDI 3
 #define CONVST 4
-#define READY_STROBE 5
+#define READY 5
 
 // ADC data out bus
 #define SDO0A 6
@@ -66,7 +66,7 @@ void initADCPins() {
   digitalWrite(SDI, LOW);
   digitalWrite(CONVST, HIGH);
 
-  pinMode(READY_STROBE, INPUT);
+  pinMode(READY, INPUT);
   pinMode(SDO0A, INPUT);
   pinMode(SDO1A, INPUT);
   pinMode(SDO2A, INPUT);
@@ -98,7 +98,28 @@ void initControls() {
   pinMode(SHIFT_CH2_B, INPUT_PULLUP);
 }
 
-void SPISend(uint16_t command) {}
+void delay15ns() {
+  for(int i = 0; i < 4; i++);
+}
+
+void pulse(int pin) {
+  digitalWrite(pin, HIGH);
+  delay15ns();
+  digitalWrite(pin, LOW);
+}
+
+void SPISend(std::bitset<16> command) {
+  digitalWrite(CS, LOW);
+  
+  for(int i = 0; i < 16; i++) {
+    digitalWrite(SDI, command[i]);
+    delay15ns();
+    pulse(SCLK);
+  }
+
+  digitalWrite(CS, HIGH);
+  digitalWrite(SDI, LOW);
+}
 
 void initADCRegisters() {
   while(digitalRead(READY) != LOW); // Wait for READY to go low
@@ -111,17 +132,31 @@ void initADCRegisters() {
   digitalWrite(CONVST, LOW);
 }
 
-void delay15ns() {
-  for(int i = 0; i < 4; i++);
-}
 
-pulseCONVST() {
-  digitalWrite(CONVST, HIGH);
-  delay15ns();
-  digitalWrite(CONVST, LOW);
+
+unsigned int read4bit(int SDO0, int SDO1, int SDO2, int SDO3) {
+  return (digitalRead(SDO0) == HIGH) |
+        ((digitalRead(SDO1) == HIGH) << 1) |
+        ((digitalRead(SDO2) == HIGH) << 2) |
+        ((digitalRead(SDO3) == HIGH) << 3);
 }
 
 void CRTRead(Buffer &CH1, Buffer &CH2) {
+  while(digitalRead(READY) != HIGH); // Wait for READY to go high
+  digitalWrite(CS, LOW);
+  
+  for(int i = 0; i < 4; i++) {
+    delay15ns();
+    uint16_t read1 = 0, read2 = 0;
+    
+    digitalWrite(SCLK, HIGH);
+    while(digitalRead(READY) != HIGH); // Wait for READY/STROBE to catch up to SCLK
+
+    read1 |= read4bit(SDO0A, SDO1A, SDO2A, SDO3A) << (4 * i);
+    read2 |= read4bit(SDO0B, SDO1B, SDO2B, SDO3B) << (4 * i);
+    digitalWrite(SCLK, LOW);
+  }
+
 }
 
 bool controlsRead(DisplayAdjust &display, Trigger &trigger) {
@@ -161,8 +196,9 @@ bool acquireInput(Buffer &CH1, Buffer &CH2, DisplayAdjust &display, Trigger &tri
   CH2.setEnable(digitalRead(ENABLE_CH2 == LOW));
   
   // Read a sample from ADC
-  pulseCONVST();
-  pulseCONVST();
+  pulse(CONVST);
+  delay15ns();
+  pulse(CONVST);
   CRTRead(CH1, CH2);
 
   // Update other controls and return bool if graphics need to be updated.

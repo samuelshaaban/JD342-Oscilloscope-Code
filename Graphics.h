@@ -4,7 +4,7 @@
 #include "DataTypes.h"
 #include <SPI.h>
 #include <Adafruit_GFX.h>
-#include <Adafruit_ST7565.h>
+#include <ST7565_LCD.h>
 
 // Define SPI Pins(add numbers...)
 #define LCD_CS

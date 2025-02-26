@@ -2,98 +2,97 @@
 #define GRAPHICS_H
 
 #include "DataTypes.h"
-#include <SPI.h>
-#include <Adafruit_GFX.h>
-#include <ST7565_LCD.h>
+#include <Arduino.h>
+#include <U8g2lib.h>
 
 // Define SPI Pins(add numbers...)
-#define LCD_CS
-#define LCD_RST
-#define LCD_DC
+#define LCD_CL 18 
+#define LCD_DATA 23 
+#define LCD_RST 4
+#define LCD_DC 2
 
 // Initialize ST7565 Display
-Adafruit_ST7565 display(LCD_CS, LCD_DC, LCD_RST);
+U8G2_ST7565_NHD_C12864_F_3W_SW_SPI u8g2(U8G2_R0, LCD_CL, LCD_DATA, LCD_DC, LCD_RST);
 
 // initilization for graphics function
 void InitGraphics() {
-    display.begin();
-    display.setContrast(30);  // Adjust for best visibility
-    display.clearDisplay();
+    u8g2.begin();
+    u8g2.setFont(u8g2_font_5x8_tf);//set font size to 5x8
 }
 
 // Draw the waveform on the ST7565 display
 void UpdateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &triggerSettings) {
-    display.clearDisplay();
+    u8g2.clearBuffer();
     if(CH1.enabled()){
       displayChannel(CH1,scale.CH1Scale,scale.timeScale,triggerSettings,0);
-      display.setCursor(0,8); display.print("C1");
+      u8g2.drawStr(0, 8, "C1");
     }
     if(CH2.enabled()){
       displayChannel(CH2,scale.CH2Scale,scale.timeScale,triggerSettings,1);
-      display.setCursor(0,16); display.print("C2");
+      u8g2.drawStr(0, 16, "C2");
     }
     //label axies
-    display.setCursor(6,0); display.print("V");
-    display.setCursor(120,48); display.print("t");
+    u8g2.drawStr(6, 0, "V");
+    u8g2.drawStr(120, 48, "t");
 
     //display sample count
-    display.setCursor(60,56); display.print("Smplcnt");//display sample count
+    int time = displayAdjust.timeScale;
+    u8g2.drawStr(60,56,"Smplcnt");//display sample count
+    u8g2.setCursor(102,56);
     int smplcnt = time * 1.5;//time in usec * our 1.5MSPS to achive sample count
     if(smplcnt <1000){
-      display.print(smplcnt);
-    }elseif(smplcnt < 1000000){
-      display.print(smplcnt/1000);display.print("k");
+      u8g2.print(smplcnt);
+    }else if(smplcnt < 1000000){
+      u8g2.print(smplcnt/1000);u8g2.print("k");
     }else{
-      display.print(">1M");
+      u8g2.print(">1M");
     }
 
     //display time scale
-    display.setCursor(0,56);display.print("tMax");
+    u8g2.setCursor(0,56);u8g2.print("tMax");
     if(time < 1000){
-      display.print(time); display.print("us");
-    }elseif(time < 1000000){
-      display.print(time/1000);display.print("ms");
-    }else{
-      display.print(time/1000000);display.print("s");
+      u8g2.print(time); u8g2.print("us");
+    }else if(time < 1000000){
+      u8g2.print(time/1000);u8g2.print("ms");
     }
-
-    //display voltage scale
-    display.setCursor(0,48);
-    display.print("V:");display.print(-scale);display.print("Vto");
-    display.print(scale);display.print("V");
+/*fix*/
+    /*/display voltage scale
+    u8g2.setCursor(0,48);
+    u8g2.print("V:-");u8g2.print(scale);u8g2.print("Vto");
+    u8g2.print(scale);u8g2.print("V");*/
 
     //display trigger settings if enabled
     if(triggerSettings.enable){
-      display.setCursor(66,48);
-      display.print("tr");//display which trigger channel is enabled
+      u8g2.setCursor(66,48);
+      u8g2.print("tr");//display which trigger channel is enabled
       if(triggerSettings.CH2){
-        display.print("2");
+        u8g2.print("2");
       }else{
-        display.print("1");
+        u8g2.print("1");
       }
-      display.print(static_cast<int>(round(triggerSettings.value)));//display trigger value
-      display.print("V");//label value
+      u8g2.print(static_cast<int>(round(triggerSettings.value)));//display trigger value
+      u8g2.print("V");//label value
       if(triggerSettings.decrease){
-        display.print("fe");//falling edge
+        u8g2.print("fe");//falling edge
       }else{
-        display.print("re");//rising edge
+        u8g2.print("re");//rising edge
       }
     }
 
-    display.display();  // Update the screen
-}     
+    u8g2.sendBuffer();  // Update the screen
+}  
       
-void displayChannel(Buffer CH, int scale, int time,  Trigger &triggerSettings, bool ch#){
+void displayChannel(Buffer CH, int scale, int time,  Trigger &triggerSettings, bool chNum){
     for(int i = 0; i > 115; i++){//loop over each display column i.e. column 12 to 127 (i=0 to i=115)
       float scalef = static_cast<float>(scale);
       int value = 47- static_cast<int>(((scalef+CH.get(i*(time/116))+.5)/(1+2*scalef))*(48)); //retrive y-coordinate
       //time is the max value to be shown in usec
       //scale is value from 1-20 detrimines range -1V-1V to -20V-20V
       if(value >=0 && value <=47)// if value is in range display it.
-        setpixel(i+12,value,BLACK);
+        u8g2.drawPixel(i+12,value);
 
       //check trigger condition
-      if(triggerSettings.enable && (ch# == CH2)){
+      if(triggerSettings.enable && (chNum == triggerSettings.CH2)){
         float voltage = CH.get(i*(time/116));
         float previousVoltage = CH.get((i-1)*(time/116));
 

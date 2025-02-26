@@ -55,11 +55,12 @@ void UpdateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
     }else if(time < 1000000){
       u8g2.print(time/1000);u8g2.print("ms");
     }
-/*fix*/
-    /*/display voltage scale
+
+    //display voltage scale
     u8g2.setCursor(0,48);
-    u8g2.print("V:-");u8g2.print(scale);u8g2.print("Vto");
-    u8g2.print(scale);u8g2.print("V");*/
+    u8g2.print("V1:");u8g2.print(scale.CH1Scale);//CH1 scale
+    u8g2.setCursor(30,48);
+    u8g2.print("V2:");u8g2.print(scale.CH2Scale);//CH2 scale
 
     //display trigger settings if enabled
     if(triggerSettings.enable){

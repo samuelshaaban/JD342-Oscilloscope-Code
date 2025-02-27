@@ -20,10 +20,10 @@ void setup() {
 }
 
 void loop() {
-  if(acquireInput(CH1, CH2, display, trigger)) {
-    Serial.println("Channel 1");
+  if(acquireInput(CH1, CH2, display, trigger))
+    //Serial.println("Channel 1");
     Serial.println(display.CH1Scale);
-    Serial.println(display.CH1Shift);
+    /*Serial.println(display.CH1Shift);
 
     Serial.println("Channel 2");
     Serial.println(display.CH2Scale);
@@ -41,7 +41,7 @@ void loop() {
     Serial.println(trigger.enable);
     Serial.println(trigger.decrease);
     Serial.println(trigger.CH2);
-  }
+  }*/
   /*
     if (millis() - lastUpdate >= frameInterval) {
       updateGraphics(CH1, CH2, display, trigger);

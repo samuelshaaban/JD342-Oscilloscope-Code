@@ -183,7 +183,12 @@ void updateInt(int &dst, int min, int max, int change) {
 }
 
 // uses encoderChange count
+#define delay 1000
+int updateEncoderTime = 0; //ms
 bool updateEncoder(DisplayAdjust &display, Trigger &trigger) {
+  if(updateEncoderTime + delay > millis()) return false;
+  updateEncoderTime = millis();
+
   if(encoderChange == 0) return false;
 
   // Read switches to determine what to change

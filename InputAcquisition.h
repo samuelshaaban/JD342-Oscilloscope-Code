@@ -4,26 +4,28 @@
 #include "DataTypes.h"
 #include <bitset>
 
+
+
 // ADC commands
 #define SET_BIT 0b0101<<12
 
 // ADC registers
 #define PROTOCOL_CFG  2<<8
 #define BUS_WIDTH     3<<8
-#define DATA_AVG_CFG  6<<8
+#define CRT_CFG       4<<8
 
 // ADC register field bit shifts
-#define SDO_PROTOCOL  4
-#define SDO_WIDTH     0
-#define EN_DATA_AVG   0
+#define SDO_PROTOCOL    4
+#define SDO_WIDTH       0
+#define CRT_CLK_SELECT  0
 
 
 // ADC control pins
-#define CS 1
+#define CS 1 // held high during register programming, held low to send STROBE to CONVST when looping
 #define SCLK 2
 #define SDI 3
 #define CONVST 4
-#define READY 5
+#define READY_STROBE 5
 
 // ADC data out bus
 #define SDO0A 6
@@ -42,32 +44,37 @@
 #define TRIGGER_DECREASE 17
 #define TRIGGER_CH2 18
 
-// Rotary encoders
-#define TRIGGER_VAL_A 19
-#define TRIGGER_VAL_B 20
-#define SCALE_TIME_A 21
-#define SCALE_TIME_B 22
-#define SCALE_CH1_A 23
-#define SCALE_CH1_B 24
-#define SCALE_CH2_A 25
-#define SCALE_CH2_B 26
-#define SHIFT_CH1_A 27
-#define SHIFT_CH1_B 28
-#define SHIFT_CH2_A 29
-#define SHIFT_CH2_B 30
+// Rotary encoder
+#define ENCODER_CH 19 // Selects channel
+#define ENCODER_SCALE_SHIFT 20 // Selects scale or shift
+#define ENCODER_TIME_TRIGGER 21 // Off -> default, on -> scale=time, shift=trigger, CH ignored
+// Attached to interrupts, must be 
+#define ENCODER_A 22
+#define ENCODER_B 23
 
+// Delays in ns
+#define NOP() asm("nop\n") // One 240 MHz clock cycle = 4.167 ns
+#define DELAY15NS() NOP(); NOP(); NOP(); NOP() // 4 NOP = 16.6 ns
+void pulse(int pin) {
+  DELAY15NS();
+  digitalWrite(pin, HIGH);
+  DELAY15NS();
+  digitalWrite(pin, LOW);
+}
+
+int encoderChange = 0;
+void inc
 
 void initADCPins() {
-  pinMode(CS, OUTPUT);
+  pinMode(CS, OUTPUT); 
   pinMode(SCLK, OUTPUT);
   pinMode(SDI, OUTPUT);
   pinMode(CONVST, OUTPUT);
-  digitalWrite(CS, HIGH);
+  digitalWrite(CS, HIGH); // Enable READY output for init
   digitalWrite(SCLK, LOW);
-  digitalWrite(SDI, LOW);
-  digitalWrite(CONVST, HIGH);
+  digitalWrite(CONVST, HIGH); // Held high for init
 
-  pinMode(READY, INPUT);
+  pinMode(READY_STROBE, INPUT);
   pinMode(SDO0A, INPUT);
   pinMode(SDO1A, INPUT);
   pinMode(SDO2A, INPUT);
@@ -84,29 +91,12 @@ void initControls() {
   pinMode(TRIGGER_ENABLE, INPUT_PULLUP);
   pinMode(TRIGGER_DECREASE, INPUT_PULLUP);
   pinMode(TRIGGER_CH2, INPUT_PULLUP);
-  
-  pinMode(TRIGGER_VAL_A, INPUT_PULLUP);
-  pinMode(TRIGGER_VAL_B, INPUT_PULLUP);
-  pinMode(SCALE_TIME_A, INPUT_PULLUP);
-  pinMode(SCALE_TIME_B, INPUT_PULLUP);
-  pinMode(SCALE_CH1_A, INPUT_PULLUP);
-  pinMode(SCALE_CH1_B, INPUT_PULLUP);
-  pinMode(SCALE_CH2_A, INPUT_PULLUP);
-  pinMode(SCALE_CH2_B, INPUT_PULLUP);
-  pinMode(SHIFT_CH1_A, INPUT_PULLUP);
-  pinMode(SHIFT_CH1_B, INPUT_PULLUP);
-  pinMode(SHIFT_CH2_A, INPUT_PULLUP);
-  pinMode(SHIFT_CH2_B, INPUT_PULLUP);
-}
 
-void delay15ns() {
-  for(int i = 0; i < 4; i++);
-}
-
-void pulse(int pin) {
-  digitalWrite(pin, HIGH);
-  delay15ns();
-  digitalWrite(pin, LOW);
+  pinMode(ENCODER_CH, INPUT_PULLUP);
+  pinMode(ENCODER_SCALE_SHIFT, INPUT_PULLUP);
+  pinMode(ENCODER_TIME_TRIGGER, INPUT_PULLUP);
+  pinMode(ENCODER_A, INPUT_PULLUP);
+  pinMode(ENCODER_B, INPUT_PULLUP);
 }
 
 void SPISend(std::bitset<16> command) {
@@ -114,21 +104,19 @@ void SPISend(std::bitset<16> command) {
   
   for(int i = 0; i < 16; i++) {
     digitalWrite(SDI, command[i]);
-    delay15ns();
     pulse(SCLK);
   }
 
   digitalWrite(CS, HIGH);
-  digitalWrite(SDI, LOW);
 }
 
 void initADCRegisters() {
-  while(digitalRead(READY) != LOW); // Wait for READY to go low
+  while(digitalRead(READY_STROBE) != LOW); // Wait for READY to go low
 
-  //      Op-Code   Register       Value    Field -> 16-bit command line
-  SPISend(SET_BIT | PROTOCOL_CFG | 0b011 << SDO_PROTOCOL); // CRT-DDR
-  SPISend(SET_BIT | BUS_WIDTH    | 0b11  << SDO_WIDTH);    // Quad data width
-  SPISend(SET_BIT | DATA_AVG_CFG | 0b10  << EN_DATA_AVG);  // Average every 2 readings
+  //     Op-Code(4) Register(4)    Value(8) Field Shift -> 16-bit command line
+  SPISend(SET_BIT | PROTOCOL_CFG | 0b011 << SDO_PROTOCOL);    // CRT-DDR
+  SPISend(SET_BIT | BUS_WIDTH    | 0b11  << SDO_WIDTH);       // Quad data width
+  SPISend(SET_BIT | CRT_CFG      | 0b01  << CRT_CLK_SELECT);  // Set to fastest internal clock (15 ns period)
 
   digitalWrite(CONVST, LOW);
 }
@@ -143,45 +131,65 @@ unsigned int read4bit(int SDO0, int SDO1, int SDO2, int SDO3) {
 }
 
 void CRTRead(Buffer &CH1, Buffer &CH2) {
-  while(digitalRead(READY) != HIGH); // Wait for READY to go high
-  digitalWrite(CS, LOW);
-  
-  for(int i = 0; i < 4; i++) {
-    delay15ns();
-    uint16_t read1 = 0, read2 = 0;
-    
-    digitalWrite(SCLK, HIGH);
-    while(digitalRead(READY) != HIGH); // Wait for READY/STROBE to catch up to SCLK
+  pulse(CONVST); // Tell ADC to capture sample
+  while(digitalRead(READY_STROBE) != HIGH); // Wait for READY to go HIGH
+  digitalWrite(CS, LOW); // Switch to STROBE output
 
+  bool nextEdge = HIGH;
+  uint16_t read1 = 0, read2 = 0;
+  for(int i = 0; i < 4; i++) {
+    while(digitalRead(READY_STROBE) != nextEdge); // Wait for next edge of STROBE
+
+    // Read in 4 bits for each channel
     read1 |= read4bit(SDO0A, SDO1A, SDO2A, SDO3A) << (4 * i);
     read2 |= read4bit(SDO0B, SDO1B, SDO2B, SDO3B) << (4 * i);
-    digitalWrite(SCLK, LOW);
+
+    nextEdge = (nextEdge == HIGH) ? LOW : HIGH; // Invert nextEdge
   }
 
+  CH1.insert(read1);
+  CH2.insert(read2);
 }
 
-bool controlsRead(DisplayAdjust &display, Trigger &trigger) {
-  bool changed = false;
-  bool enable   = digitalRead(TRIGGER_ENABLE) == LOW,
-       decrease = digitalRead(TRIGGER_DECREASE) == LOW,
-       CH2      = digitalRead(TRIGGER_CH2) == LOW;
+// Return if bool was changed
+bool updateBool(bool &dst, bool src) {
+  if(dst == src) return false;
+  dst = src;
+  return true;
+}
+
+bool updateTrigger(Trigger &trigger) {
+  bool change = trigger.changed ||
+    updateBool(trigger.enable, digitalRead(TRIGGER_ENABLE) == LOW) ||
+    updateBool(trigger.decrease, digitalRead(TRIGGER_DECREASE) == LOW) ||
+    updateBool(trigger.CH2, digitalRead(TRIGGER_CH2));
   
-  if(enable != trigger.enable) {
-    trigger.enable = enable;
-    changed = true;
+  return out;
+}
+
+// uses encoderChange count
+bool updateEncoder(Display &display, Trigger &trigger) {
+  if(encoderChange == 0) return false;
+
+  bool CH2 = digitalRead(ENCODER_CH, INPUT_PULLUP) == LOW,
+       shift = digitalRead(ENCODER_SCALE_SHIFT, INPUT_PULLUP) == LOW,
+       timeTrigger = digitalRead(ENCODER_TIME_TRIGGER, INPUT_PULLUP) == LOW
+
+  if(timeTrigger) {
+    if(shift) updateInt(trigger.val, 0, 1000, encoderChange);
+    else      updateInt(display.timeScale, 1, 10000, encoderChange);
+  } else { // CH voltage settings
+    if(CH2) {
+      if(shift) updateInt(display.CH2Shift, -20000, 20000, encoderChange);
+      else      updateInt(display.CH2Scale, 1, 40000, encoderChange);
+    } else { // CH1
+      if(shift) updateInt(display.CH1Shift, -20000, 20000, encoderChange);
+      else      updateInt(display.CH1Scale, 1, 40000, encoderChange);
+    }
   }
-  if(decrease != trigger.decrease) {
-    trigger.decrease = decrease;
-    changed = true;
-  }
-  if(CH2 != trigger.CH2) {
-    trigger.CH2 = CH2;
-    changed = true;
-  }
-  
-  // Read knobs
-  
-  return changed;
+
+  encoderChange = 0;
+  return true;
 }
 
 void initInput() {
@@ -192,19 +200,15 @@ void initInput() {
 }
 
 bool acquireInput(Buffer &CH1, Buffer &CH2, DisplayAdjust &display, Trigger &trigger) {
-  // Check channel enable switches
+  // Check channel enable switches and get a reading from the ADC
   CH1.setEnable(digitalRead(ENABLE_CH1 == LOW));
   CH2.setEnable(digitalRead(ENABLE_CH2 == LOW));
-  
-  // Read a sample from ADC
-  pulse(CONVST);
-  delay15ns();
-  pulse(CONVST);
   CRTRead(CH1, CH2);
 
-  // Update other controls and return bool if graphics need to be updated.
-  if(controlsRead(display, trigger)) return true; // If controls changed, return true
-  return CH1.changed() || CH2.changed(); // Else return if jump to next cycle on one of the channels
+  return updateEncoder(display, trigger) ||
+         updateTrigger(trigger) ||
+         CH1.changed() ||
+         CH2.changed();
 }
 
 #endif

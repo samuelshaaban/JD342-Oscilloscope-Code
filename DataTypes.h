@@ -25,20 +25,24 @@ class Buffer {
 };
 
 struct DisplayAdjust {
-  unsigned int timeScale,           // Width of screen (1 - 10,000 us)
-               CH1Scale, CH2Scale;  // Height of screen (1 - 40,000 mV)
-  int CH1Shift, CH2Shift;           // Vertical shift of screen (-20,000 - 20,000 mV)
+  int timeScale,           // Width of screen (1 - 10,000 us)
+      CH1Scale, CH2Scale,  // Height of screen (1 - 40,000 mV)
+      CH1Shift, CH2Shift;  // Vertical shift of screen (-20,000 - 20,000 mV)
   
   DisplayAdjust();
 };
 
 struct Trigger {
   bool enable, decrease, CH2; // decrease=false means increase, CH2 = false means CH1
-  float val;
-
+  int val; // 0.1% of screen height, 0-1000
   Trigger();
 };
 
+void updateInt(int &dst, int min, int max, int change) {
+  dst += change;
+  if(dst > max) dst = max;
+  if(dst < min) dst = min;
+}
 
 
 // Implementations

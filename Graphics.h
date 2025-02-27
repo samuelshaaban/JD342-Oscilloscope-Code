@@ -15,13 +15,15 @@
 U8G2_ST7565_NHD_C12864_F_3W_SW_SPI u8g2(U8G2_R0, LCD_CL, LCD_DATA, LCD_DC, LCD_RST);
 
 // initilization for graphics function
-void InitGraphics() {
+void initGraphics() {
     u8g2.begin();
     u8g2.setFont(u8g2_font_5x8_tf);//set font size to 5x8 (6x8 including spaces)
 }
 
+void displayChannel(Buffer CH, int scale, int time,  Trigger &triggerSettings, bool chNum);
+
 // Draw the waveform on the ST7565 display
-void UpdateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &triggerSettings) {
+void updateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &triggerSettings) {
     u8g2.clearBuffer();
     if(CH1.enabled()){
       displayChannel(CH1,scale.CH1Scale,scale.timeScale,triggerSettings,0);
@@ -36,14 +38,16 @@ void UpdateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
     u8g2.drawStr(120, 48, "t");
 
     //display sample count
-    int time = displayAdjust.timeScale;
+    int time = scale.timeScale;
     u8g2.drawStr(60,56,"Smplcnt");//display sample count
     u8g2.setCursor(102,56);
-    int smplcnt = time * 1.5;//time in usec * our 1.5MSPS to achive sample count
+    int smplcnt = static_cast<int>(time * 1.5f);//time in usec * our 1.5MSPS to achive sample count
     if(smplcnt <1000){
       u8g2.print(smplcnt);
     }else if(smplcnt < 1000000){
       u8g2.print(smplcnt/1000);u8g2.print("k");
+    }else{
+      u8g2.print(">1M");
     }
 
     //display time scale
@@ -82,7 +86,7 @@ void UpdateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
 }  
       
 void displayChannel(Buffer CH, int scale, int time,  Trigger &triggerSettings, bool chNum){
-    for(int i = 0; i > 115; i++){//loop over each display column i.e. column 12 to 127 (i=0 to i=115)
+    for(int i = 0; i < 115; i++){//loop over each display column i.e. column 12 to 127 (i=0 to i=115)
       float scalef = static_cast<float>(scale);
       int value = 47- static_cast<int>(((scalef+CH.get(i*(time/116))+.5)/(1+2*scalef))*(48)); //retrive y-coordinate
       //time is the max value to be shown in usec
@@ -92,18 +96,18 @@ void displayChannel(Buffer CH, int scale, int time,  Trigger &triggerSettings, b
 
       //check trigger condition
       if(triggerSettings.enable && (chNum == triggerSettings.CH2)){
-        float voltage = CH.get(i*(time/116));
-        float previousVoltage = CH.get((i-1)*(time/116));
+        float voltage = CH.get(i*(time/116.0));
+        float previousVoltage = CH.get((i-1)*(time/116.0));
 
         if (!triggerSettings.decrease) {
           // Rising edge: Check if signal crosses the threshold
           if (previousVoltage < triggerSettings.val && voltage >= triggerSettings.val) {
-            triggerSettings.triggered = true;
+            //triggerSettings.triggered = true;
           }
         } else {
           // Falling edge: Check if signal crosses the threshold from above
           if (previousVoltage > triggerSettings.val && voltage <= triggerSettings.val) {
-            triggerSettings.triggered = true;
+            //triggerSettings.triggered = true;
           }
         }
       }

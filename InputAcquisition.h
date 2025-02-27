@@ -61,16 +61,26 @@ void pulse(int pin) {
   digitalWrite(pin, LOW);
 }
 
-// First pulse every sample cycle sets direction, conunt direction pulse, all pulses of other channel are ignored
+// First pulse every sample cycle sets direction, other channel will pulse while the first is still on
+// Encoder shorts pins to ground, a pulse is a low value
 int encoderChange = 0;
-void encoderInc() {
-  if(encoderChange < 0) return;
-  encoderChange++;
+// Return if count should change
+bool encoder(int ch1, int ch2) {
+  while(digitalRead(ch2) == HIGH); // If CH1 leads CH2, CH2 will already be low
+  while(digitalRead(ch1) == LOW) // Before CH1 is released
+    if(digitalRead(ch2) == LOW) return true; // If CH2 pulses, return to change
+
+  return false; // else no change
 }
 
-void encoderDec() {
+void encoderA() {
+  if(encoderChange < 0) return;
+  if(encoder(ENCODER_A, ENCODER_B)) encoderChange++;
+}
+
+void encoderB() {
   if(encoderChange > 0) return;
-  encoderChange--;
+  if(encoder(ENCODER_B, ENCODER_A)) encoderChange--;
 }
 
 void initADCPins() {
@@ -105,8 +115,8 @@ void initControls() {
   pinMode(ENCODER_TIME_TRIGGER, INPUT_PULLUP);
   pinMode(ENCODER_A, INPUT_PULLUP);
   pinMode(ENCODER_B, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(ENCODER_A), encoderInc, FALLING);
-  attachInterrupt(digitalPinToInterrupt(ENCODER_B), encoderDec, FALLING);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_A), encoderA, FALLING);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_B), encoderB, FALLING);
 }
 
 void SPISend(std::bitset<16> command) {
@@ -183,7 +193,7 @@ void updateInt(int &dst, int min, int max, int change) {
 }
 
 // uses encoderChange count
-#define delay 1000
+#define delay 100
 int updateEncoderTime = 0; //ms
 bool updateEncoder(DisplayAdjust &display, Trigger &trigger) {
   if(updateEncoderTime + delay > millis()) return false;

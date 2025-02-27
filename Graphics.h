@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 
-// Define SPI Pins(add numbers...)
+// Define SPI Pins(adjust numbers...)
 #define LCD_CL 18 
 #define LCD_DATA 23 
 #define LCD_RST 4
@@ -17,7 +17,7 @@ U8G2_ST7565_NHD_C12864_F_3W_SW_SPI u8g2(U8G2_R0, LCD_CL, LCD_DATA, LCD_DC, LCD_R
 // initilization for graphics function
 void InitGraphics() {
     u8g2.begin();
-    u8g2.setFont(u8g2_font_5x8_tf);//set font size to 5x8
+    u8g2.setFont(u8g2_font_5x8_tf);//set font size to 5x8 (6x8 including spaces)
 }
 
 // Draw the waveform on the ST7565 display
@@ -71,7 +71,7 @@ void UpdateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
       }else{
         u8g2.print("1");
       }
-      u8g2.print(static_cast<int>(round(triggerSettings.value)));//display trigger value
+      u8g2.print(static_cast<int>(round(triggerSettings.val)));//display trigger value
       u8g2.print("V");//label value
       if(triggerSettings.decrease){
         u8g2.print("fe");//falling edge
@@ -99,12 +99,12 @@ void displayChannel(Buffer CH, int scale, int time,  Trigger &triggerSettings, b
 
         if (!triggerSettings.decrease) {
           // Rising edge: Check if signal crosses the threshold
-          if (previousVoltage < triggerSettings.value && voltage >= triggerSettings.value) {
+          if (previousVoltage < triggerSettings.val && voltage >= triggerSettings.val) {
             triggerSettings.triggered = true;
           }
         } else {
           // Falling edge: Check if signal crosses the threshold from above
-          if (previousVoltage > triggerSettings.value && voltage <= triggerSettings.value) {
+          if (previousVoltage > triggerSettings.val && voltage <= triggerSettings.val) {
             triggerSettings.triggered = true;
           }
         }

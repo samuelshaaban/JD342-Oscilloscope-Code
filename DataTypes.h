@@ -48,8 +48,6 @@ void Buffer::setEnable(bool enable) { this->enable = enable; }
 bool Buffer::enabled() { return this->enable; }
 bool Buffer::changed() { return this->change; }
 
-
-
 void Buffer::insert(uint16_t adcOut) {
   lastSample = (lastSample + 1) % BUFFER_LEN;
   time[lastSample] = micros();
@@ -58,36 +56,17 @@ void Buffer::insert(uint16_t adcOut) {
   // Set change
 }
 
-float Buffer::get(int us) { 
-  int curTime = time[lastSample];
-  unsigned int i = lastSample + 3 * us; // 3 MSPS = 3 samples per us
-  unsigned int usPer10Samples = (time[i] - curTime) * 10 / (i - lastSample); 
-
-<<<<<<< HEAD
-  // Correct with calculated sample rate
-  int error = time[i] - curTime - us;
-  i += error / usPer10Samples / 10; //
-
-  // Go in correct direction until we cross the time we are aiming for
-  bool tooBig = time[i] - curTime > us;
-  while((time[i] - curTime > us) == tooBig) i++;
-
-  return volt[i];
-}
-=======
-float Buffer::get(int us) { return volt[index(us)]; }
-/* not sure if this would work?
 float Buffer::get(int us) {
   for(unsigned int i = 0; i < BUFFER_LEN; i++){
     unsigned int index = (lastSample + i) % BUFFER_LEN;
-    if(time[index] >= ms){
+    if(time[index] >= us){
       return volt[index];
     }
   }
-  return 0.0f
+  return 0.0f;
 }
-*/
->>>>>>> 0525fe0833c971379a0c098da68b5e86f1569bf1
+
+
 
 DisplayAdjust::DisplayAdjust():
   timeScale(1), CH1Scale(1), CH2Scale(1), CH1Shift(0), CH2Shift(0) {}

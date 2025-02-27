@@ -208,17 +208,17 @@ bool updateEncoder(DisplayAdjust &display, Trigger &trigger) {
 }
 
 void initInput() {
-  initADCPins();
+  //initADCPins();
   initControls();
 
-  initADCRegisters();
+  //initADCRegisters();
 }
 
 bool acquireInput(Buffer &CH1, Buffer &CH2, DisplayAdjust &display, Trigger &trigger) {
   // Check channel enable switches and get a reading from the ADC
   CH1.setEnable(digitalRead(ENABLE_CH1 == LOW));
   CH2.setEnable(digitalRead(ENABLE_CH2 == LOW));
-  CRTRead(CH1, CH2);
+  //CRTRead(CH1, CH2);
 
   return updateEncoder(display, trigger) ||
          updateTrigger(trigger) ||

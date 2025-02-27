@@ -63,8 +63,7 @@ void Buffer::insert(uint16_t adcOut) {
 
 
 float Buffer::get(int us) { return volt[index(us)]; }
-=======
-void Buffer::insert(uint16_t adcOut) {}
+/* not sure if this would work?
 float Buffer::get(int us) {
   for(unsigned int i = 0; i < BUFFER_LEN; i++){
     unsigned int index = (lastSample + i) % BUFFER_LEN;
@@ -74,7 +73,7 @@ float Buffer::get(int us) {
   }
   return 0.0f
 }
->>>>>>> ae27cd2d04156a659e3c624d3f297440267406d5
+*/
 
 DisplayAdjust::DisplayAdjust():
   timeScale(1), CH1Scale(1), CH2Scale(1), CH1Shift(0), CH2Shift(0) {}

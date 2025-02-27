@@ -33,7 +33,8 @@ struct DisplayAdjust {
 };
 
 struct Trigger {
-  bool enable, decrease, CH2; // decrease=false means increase, CH2 = false means CH1
+  bool enable, decrease, CH2, // decrease=false means increase, CH2 = false means CH1
+        triggered;
   int val; // 0.1% of screen height, 0-1000
 
   Trigger();
@@ -71,6 +72,6 @@ float Buffer::get(int us) {
 DisplayAdjust::DisplayAdjust():
   timeScale(1), CH1Scale(1), CH2Scale(1), CH1Shift(0), CH2Shift(0) {}
 
-Trigger::Trigger(): enable(false), decrease(false), CH2(false), val(0) {}
+Trigger::Trigger(): enable(false), decrease(false), CH2(false), triggered(false), val(0) {}
 
 #endif

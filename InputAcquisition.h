@@ -56,21 +56,29 @@
 #define NOP() asm("nop\n") // One 240 MHz clock cycle = 4.167 ns
 #define DELAY15NS() NOP(); NOP(); NOP(); NOP() // 4 NOP = 16.6 ns
 void pulse(int pin) {
-  DELAY15NS();
   digitalWrite(pin, HIGH);
   DELAY15NS();
   digitalWrite(pin, LOW);
 }
 
+// First pulse every sample cycle sets direction, conunt direction pulse, all pulses of other channel are ignored
 int encoderChange = 0;
-void inc
+void encoderInc() {
+  if(encoderChange < 0) return;
+  encoderChange++;
+}
+
+void encoderDec() {
+  if(encoderChange > 0) return;
+  encoderChange--;
+}
 
 void initADCPins() {
   pinMode(CS, OUTPUT); 
   pinMode(SCLK, OUTPUT);
   pinMode(SDI, OUTPUT);
   pinMode(CONVST, OUTPUT);
-  digitalWrite(CS, HIGH); // Enable READY output for init
+  digitalWrite(CS, HIGH); //CS stays HIGH when not communicating
   digitalWrite(SCLK, LOW);
   digitalWrite(CONVST, HIGH); // Held high for init
 
@@ -97,14 +105,17 @@ void initControls() {
   pinMode(ENCODER_TIME_TRIGGER, INPUT_PULLUP);
   pinMode(ENCODER_A, INPUT_PULLUP);
   pinMode(ENCODER_B, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_A), encoderInc, FALLING);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_B), encoderDec, FALLING);
 }
 
 void SPISend(std::bitset<16> command) {
   digitalWrite(CS, LOW);
   
   for(int i = 0; i < 16; i++) {
-    digitalWrite(SDI, command[i]);
-    pulse(SCLK);
+    digitalWrite(SDI, command[i]); // Write bit of command to SDI
+    DELAY15NS();
+    pulse(SCLK); // Tell ADC to read bit from SDI
   }
 
   digitalWrite(CS, HIGH);
@@ -139,14 +150,14 @@ void CRTRead(Buffer &CH1, Buffer &CH2) {
   uint16_t read1 = 0, read2 = 0;
   for(int i = 0; i < 4; i++) {
     while(digitalRead(READY_STROBE) != nextEdge); // Wait for next edge of STROBE
+    nextEdge = (nextEdge == HIGH) ? LOW : HIGH; // Invert nextEdge
 
     // Read in 4 bits for each channel
     read1 |= read4bit(SDO0A, SDO1A, SDO2A, SDO3A) << (4 * i);
     read2 |= read4bit(SDO0B, SDO1B, SDO2B, SDO3B) << (4 * i);
-
-    nextEdge = (nextEdge == HIGH) ? LOW : HIGH; // Invert nextEdge
   }
 
+  digitalWrite(CS, HIGH); // Done communicating
   CH1.insert(read1);
   CH2.insert(read2);
 }
@@ -167,14 +178,21 @@ bool updateTrigger(Trigger &trigger) {
   return out;
 }
 
+// Ensures int stays between min and max
+void updateInt(int &dst, int min, int max, int change) {
+  dst += change;
+  if(dst > max) dst = max;
+  if(dst < min) dst = min;
+}
+
 // uses encoderChange count
 bool updateEncoder(Display &display, Trigger &trigger) {
   if(encoderChange == 0) return false;
 
+  // Read switches to determine what to change
   bool CH2 = digitalRead(ENCODER_CH, INPUT_PULLUP) == LOW,
        shift = digitalRead(ENCODER_SCALE_SHIFT, INPUT_PULLUP) == LOW,
        timeTrigger = digitalRead(ENCODER_TIME_TRIGGER, INPUT_PULLUP) == LOW
-
   if(timeTrigger) {
     if(shift) updateInt(trigger.val, 0, 1000, encoderChange);
     else      updateInt(display.timeScale, 1, 10000, encoderChange);

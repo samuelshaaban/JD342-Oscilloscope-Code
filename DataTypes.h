@@ -13,6 +13,8 @@ class Buffer {
 
     unsigned int lastSample, lastPeak;
 
+    unsigned int index(int us);
+
   public:
     Buffer();
     void setEnable(bool enable);
@@ -35,14 +37,10 @@ struct DisplayAdjust {
 struct Trigger {
   bool enable, decrease, CH2; // decrease=false means increase, CH2 = false means CH1
   int val; // 0.1% of screen height, 0-1000
+
   Trigger();
 };
 
-void updateInt(int &dst, int min, int max, int change) {
-  dst += change;
-  if(dst > max) dst = max;
-  if(dst < min) dst = min;
-}
 
 
 // Implementations
@@ -52,8 +50,18 @@ void Buffer::setEnable(bool enable) { this->enable = enable; }
 bool Buffer::enabled() { return this->enable; }
 bool Buffer::changed() { return this->change; }
 
-void Buffer::insert(uint16_t adcOut) {}
-float Buffer::get(int us) {}
+// 3 MSPS = 1/3 us per sample
+unsigned int Buffer::index(int us) {
+  int curTime = time[]
+}
+
+void Buffer::insert(uint16_t adcOut) {
+  float val = ((float)adcOut - 1.5) * 20;
+
+}
+
+
+float Buffer::get(int us) { return volt[index(us)]; }
 
 DisplayAdjust::DisplayAdjust():
   timeScale(1), CH1Scale(1), CH2Scale(1), CH1Shift(0), CH2Shift(0) {}

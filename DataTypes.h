@@ -63,6 +63,7 @@ float Buffer::get(int us) {
   unsigned int i = lastSample + 3 * us; // 3 MSPS = 3 samples per us
   unsigned int usPer10Samples = (time[i] - curTime) * 10 / (i - lastSample); 
 
+<<<<<<< HEAD
   // Correct with calculated sample rate
   int error = time[i] - curTime - us;
   i += error / usPer10Samples / 10; //
@@ -73,6 +74,20 @@ float Buffer::get(int us) {
 
   return volt[i];
 }
+=======
+float Buffer::get(int us) { return volt[index(us)]; }
+/* not sure if this would work?
+float Buffer::get(int us) {
+  for(unsigned int i = 0; i < BUFFER_LEN; i++){
+    unsigned int index = (lastSample + i) % BUFFER_LEN;
+    if(time[index] >= ms){
+      return volt[index];
+    }
+  }
+  return 0.0f
+}
+*/
+>>>>>>> 0525fe0833c971379a0c098da68b5e86f1569bf1
 
 DisplayAdjust::DisplayAdjust():
   timeScale(1), CH1Scale(1), CH2Scale(1), CH1Shift(0), CH2Shift(0) {}

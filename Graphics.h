@@ -86,6 +86,7 @@ void updateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
 }  
       
 void displayChannel(Buffer CH, int scale, int time,  Trigger &triggerSettings, bool chNum){
+  if(triggerSettings.triggered == false){
     for(int i = 0; i < 115; i++){//loop over each display column i.e. column 12 to 127 (i=0 to i=115)
       float scalef = static_cast<float>(scale);
       int value = 47- static_cast<int>(((scalef+CH.get(i*(time/116))+.5)/(1+2*scalef))*(48)); //retrive y-coordinate
@@ -102,16 +103,18 @@ void displayChannel(Buffer CH, int scale, int time,  Trigger &triggerSettings, b
         if (!triggerSettings.decrease) {
           // Rising edge: Check if signal crosses the threshold
           if (previousVoltage < triggerSettings.val && voltage >= triggerSettings.val) {
-            //triggerSettings.triggered = true;
+            triggerSettings.triggered = true;
           }
         } else {
           // Falling edge: Check if signal crosses the threshold from above
           if (previousVoltage > triggerSettings.val && voltage <= triggerSettings.val) {
-            //triggerSettings.triggered = true;
+            triggerSettings.triggered = true;
           }
         }
       }
     }
+  }
 }
 
 #endif
+

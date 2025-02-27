@@ -44,8 +44,6 @@ void UpdateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
       u8g2.print(smplcnt);
     }else if(smplcnt < 1000000){
       u8g2.print(smplcnt/1000);u8g2.print("k");
-    }else{
-      u8g2.print(">1M");
     }
 
     //display time scale

@@ -26,11 +26,11 @@ void displayChannel(Buffer CH, int scale, int time,  Trigger &triggerSettings, b
 void updateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &triggerSettings) {
     u8g2.clearBuffer();
     if(CH1.enabled()){
-      displayChannel(CH1,scale.CH1Scale,scale.timeScale,triggerSettings,0);
+      displayChannel(CH1,scale.CH1Scale,scale.CH1Shift,scale.timeScale,triggerSettings,0);
       u8g2.drawStr(0, 8, "C1");
     }
     if(CH2.enabled()){
-      displayChannel(CH2,scale.CH2Scale,scale.timeScale,triggerSettings,1);
+      displayChannel(CH2,scale.CH2Scale,scale.CH2Shift,scale.timeScale,triggerSettings,1);
       u8g2.drawStr(0, 16, "C2");
     }
     //label axies
@@ -85,11 +85,11 @@ void updateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
     u8g2.sendBuffer();  // Update the screen
 }  
       
-void displayChannel(Buffer CH, int scale, int time,  Trigger &triggerSettings, bool chNum){
+void displayChannel(Buffer CH, int scale, int shift, int time,  Trigger &triggerSettings, bool chNum){
   if(triggerSettings.triggered == false){
     for(int i = 0; i < 115; i++){//loop over each display column i.e. column 12 to 127 (i=0 to i=115)
       float scalef = static_cast<float>(scale);
-      int value = 47- static_cast<int>(((scalef+CH.get(i*(time/116))+.5)/(1+2*scalef))*(48)); //retrive y-coordinate
+      int value = 47- static_cast<int>(((scalef+CH.get(i*(time/116))+.5+shift)/(1+2*scalef))*(48)); //retrive y-coordinate
       //time is the max value to be shown in usec
       //scale is value from 1-20 detrimines range -1V-1V to -20V-20V
       if(value >=0 && value <=47)// if value is in range display it.

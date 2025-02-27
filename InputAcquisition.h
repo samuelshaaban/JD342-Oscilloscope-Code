@@ -170,12 +170,9 @@ bool updateBool(bool &dst, bool src) {
 }
 
 bool updateTrigger(Trigger &trigger) {
-  bool change = trigger.changed ||
-    updateBool(trigger.enable, digitalRead(TRIGGER_ENABLE) == LOW) ||
-    updateBool(trigger.decrease, digitalRead(TRIGGER_DECREASE) == LOW) ||
-    updateBool(trigger.CH2, digitalRead(TRIGGER_CH2));
-  
-  return out;
+  return updateBool(trigger.enable, digitalRead(TRIGGER_ENABLE) == LOW) ||
+         updateBool(trigger.decrease, digitalRead(TRIGGER_DECREASE) == LOW) ||
+         updateBool(trigger.CH2, digitalRead(TRIGGER_CH2));
 }
 
 // Ensures int stays between min and max
@@ -186,13 +183,13 @@ void updateInt(int &dst, int min, int max, int change) {
 }
 
 // uses encoderChange count
-bool updateEncoder(Display &display, Trigger &trigger) {
+bool updateEncoder(DisplayAdjust &display, Trigger &trigger) {
   if(encoderChange == 0) return false;
 
   // Read switches to determine what to change
-  bool CH2 = digitalRead(ENCODER_CH, INPUT_PULLUP) == LOW,
-       shift = digitalRead(ENCODER_SCALE_SHIFT, INPUT_PULLUP) == LOW,
-       timeTrigger = digitalRead(ENCODER_TIME_TRIGGER, INPUT_PULLUP) == LOW
+  bool CH2 = digitalRead(ENCODER_CH) == LOW,
+       shift = digitalRead(ENCODER_SCALE_SHIFT) == LOW,
+       timeTrigger = digitalRead(ENCODER_TIME_TRIGGER) == LOW;
   if(timeTrigger) {
     if(shift) updateInt(trigger.val, 0, 1000, encoderChange);
     else      updateInt(display.timeScale, 1, 10000, encoderChange);

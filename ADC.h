@@ -2,6 +2,7 @@
 #define ADC_H
 
 #include <bitset>
+#include "DataTypes.h"
 
 // ADC commands
 #define SET_BIT 0b0101<<12

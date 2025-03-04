@@ -48,7 +48,8 @@
 #define ENCODER_CH 19 // Selects channel
 #define ENCODER_SCALE_SHIFT 20 // Selects scale or shift
 #define ENCODER_TIME_TRIGGER 21 // Off -> default, on -> scale=time, shift=trigger, CH ignored
-// Attached to interrupts, must be 
+#define ENCODER_COARSE 27// ON = 100x encoder speed
+// Attached to interrupts, pins must support
 #define ENCODER_A 22
 #define ENCODER_B 23
 
@@ -61,16 +62,29 @@ void pulse(int pin) {
   digitalWrite(pin, LOW);
 }
 
-// First pulse every sample cycle sets direction, conunt direction pulse, all pulses of other channel are ignored
-int encoderChange = 0;
-void encoderInc() {
-  if(encoderChange < 0) return;
-  encoderChange++;
+
+// First pulse every sample cycle sets direction, other channel will pulse while the first is still on
+// Encoder shorts pins to ground, a pulse is a low value
+// Return if count should change
+bool encoder(int ch1, int ch2) {
+  while(digitalRead(ch2) == LOW); // After CH2 is released
+  while(digitalRead(ch1) == LOW) // Before CH1 is released
+    if(digitalRead(ch2) == LOW) return true; // If CH2 pulses, return to change
+
+  return false; // else no change
 }
 
-void encoderDec() {
+// Running count, following functions lock the direction until updateEncoder() is called
+int encoderChange = 0;
+
+void encoderA() {
+  if(encoderChange < 0) return;
+  if(encoder(ENCODER_A, ENCODER_B)) encoderChange++;
+}
+
+void encoderB() {
   if(encoderChange > 0) return;
-  encoderChange--;
+  if(encoder(ENCODER_B, ENCODER_A)) encoderChange--;
 }
 
 void initADCPins() {
@@ -103,10 +117,11 @@ void initControls() {
   pinMode(ENCODER_CH, INPUT_PULLUP);
   pinMode(ENCODER_SCALE_SHIFT, INPUT_PULLUP);
   pinMode(ENCODER_TIME_TRIGGER, INPUT_PULLUP);
+  pinMode(ENCODER_COARSE, INPUT_PULLUP);
   pinMode(ENCODER_A, INPUT_PULLUP);
   pinMode(ENCODER_B, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(ENCODER_A), encoderInc, FALLING);
-  attachInterrupt(digitalPinToInterrupt(ENCODER_B), encoderDec, FALLING);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_A), encoderA, FALLING);
+  attachInterrupt(digitalPinToInterrupt(ENCODER_B), encoderB, FALLING);
 }
 
 void SPISend(std::bitset<16> command) {
@@ -185,6 +200,7 @@ void updateInt(int &dst, int min, int max, int change) {
 // uses encoderChange count
 bool updateEncoder(DisplayAdjust &display, Trigger &trigger) {
   if(encoderChange == 0) return false;
+  if(digitalRead(ENCODER_COARSE) == LOW) encoderChange *= 100; // Read switch for 100x
 
   // Read switches to determine what to change
   bool CH2 = digitalRead(ENCODER_CH) == LOW,

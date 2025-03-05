@@ -20,7 +20,7 @@ void initGraphics() {
     u8g2.setFont(u8g2_font_5x8_tf);//set font size to 5x8 (6x8 including spaces)
 }
 
-void displayChannel(Buffer CH, int scale, int time,  Trigger &triggerSettings, bool chNum);
+void displayChannel(Buffer CH, int scale, int shift, int time,  Trigger &triggerSettings, bool chNum);
 
 // Draw the waveform on the ST7565 display
 void updateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &triggerSettings) {
@@ -41,7 +41,7 @@ void updateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
     int time = scale.timeScale;
     u8g2.drawStr(60,56,"Smplcnt");//display sample count
     u8g2.setCursor(102,56);
-    int smplcnt = static_cast<int>(time * 1.5f);//time in usec * our 1.5MSPS to achive sample count
+    int smplcnt = static_cast<int>(time * 1.5);//time in usec * our 1.5MSPS to achive sample count
     if(smplcnt <1000){
       u8g2.print(smplcnt);
     }else if(smplcnt < 1000000){
@@ -54,15 +54,15 @@ void updateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
     u8g2.setCursor(0,56);u8g2.print("tMax");
     if(time < 1000){
       u8g2.print(time); u8g2.print("us");
-    }else if(time < 1000000){
+    }else{
       u8g2.print(time/1000);u8g2.print("ms");
     }
 
     //display voltage scale
     u8g2.setCursor(0,48);
-    u8g2.print("V1:");u8g2.print(scale.CH1Scale);//CH1 scale
+    u8g2.print("V1:");u8g2.print(scale.CH1Scale/1000);//CH1 scale
     u8g2.setCursor(30,48);
-    u8g2.print("V2:");u8g2.print(scale.CH2Scale);//CH2 scale
+    u8g2.print("V2:");u8g2.print(scale.CH2Scale/1000);//CH2 scale
 
     //display trigger settings if enabled
     if(triggerSettings.enable){
@@ -88,10 +88,13 @@ void updateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
 void displayChannel(Buffer CH, int scale, int shift, int time,  Trigger &triggerSettings, bool chNum){
   if(triggerSettings.triggered == false){
     for(int i = 0; i < 115; i++){//loop over each display column i.e. column 12 to 127 (i=0 to i=115)
-      float scalef = static_cast<float>(scale);
-      int value = 47- static_cast<int>(((scalef+CH.get(i*(time/116))+.5+shift)/(1+2*scalef))*(48)); //retrive y-coordinate
+      float scalef = (scale)/1000.0;
+      float shiftf = (shift)/1000.0;
+      int value = 23 - static_cast<int>((CH.get(i*(time/116))/scalef)*(24)); //retrive y-coordinate
+      value += 23 - static_cast<int>((shiftf)/(scalef)*(24));//performs shift 
       //time is the max value to be shown in usec
-      //scale is value from 1-20 detrimines range -1V-1V to -20V-20V
+      //scale is value from 1-20k detrimines range -1mV to 1mV to -20V to 20V
+      //shift is value from -20k-20k shifts screen display range anywhere between down 20V to up 20V
       if(value >=0 && value <=47)// if value is in range display it.
         u8g2.drawPixel(i+12,value);
 

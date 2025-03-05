@@ -64,7 +64,7 @@ bool updateEncoder(DisplayAdjust &display, Trigger &trigger) {
        shift = digitalRead(ENCODER_SCALE_SHIFT) == LOW,
        timeTrigger = digitalRead(ENCODER_TIME_TRIGGER) == LOW;
   if(timeTrigger) {
-    if(shift) updateInt(trigger.val, 0, 1000, encoderChange);
+    if(shift) updateInt(trigger.val, -20000, 20000, encoderChange);
     else      updateInt(display.timeScale, 1, 10000, encoderChange);
   } else { // CH voltage settings
     if(CH2) {

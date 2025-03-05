@@ -34,8 +34,8 @@ struct DisplayAdjust {
 
 struct Trigger {
   bool enable, decrease, CH2, // decrease=false means increase, CH2 = false means CH1
-        triggered;
-  int val; // 0.1% of screen height, 0-1000
+       triggered;
+  int val; // Voltage setting of trigger (-20,000 - 20,000 mV)
 
   Trigger();
 };

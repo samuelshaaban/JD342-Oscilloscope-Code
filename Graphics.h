@@ -100,8 +100,8 @@ void displayChannel(Buffer CH, int scale, int shift, int time,  Trigger &trigger
 
       //check trigger condition
       if(triggerSettings.enable && (chNum == triggerSettings.CH2)){
-        float voltage = CH.get(i*(time/116.0));
-        float previousVoltage = CH.get((i-1)*(time/116.0));
+        float voltage = CH.get(i*(time/116.0))*1000.0;
+        float previousVoltage = CH.get((i-1)*(time/116.0))*1000.0;
 
         if (!triggerSettings.decrease) {
           // Rising edge: Check if signal crosses the threshold

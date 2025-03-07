@@ -28,10 +28,16 @@ void updateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
     if(CH1.enabled()){
       displayChannel(CH1,scale.CH1Scale,scale.CH1Shift,scale.timeScale,triggerSettings,0);
       u8g2.drawStr(0, 8, "C1");
+      //display voltage scale
+      u8g2.setCursor(0,48);
+      u8g2.print("V1:");u8g2.print(scale.CH1Scale/1000);//CH1 scale
     }
     if(CH2.enabled()){
       displayChannel(CH2,scale.CH2Scale,scale.CH2Shift,scale.timeScale,triggerSettings,1);
       u8g2.drawStr(0, 16, "C2");
+      //display voltage scale
+      u8g2.setCursor(30,48);
+      u8g2.print("V2:");u8g2.print(scale.CH2Scale/1000);//CH2 scale
     }
     //label axies
     u8g2.drawStr(6, 0, "V");
@@ -57,12 +63,6 @@ void updateGraphics(Buffer &CH1, Buffer &CH2, DisplayAdjust &scale, Trigger &tri
     }else{
       u8g2.print(time/1000);u8g2.print("ms");
     }
-
-    //display voltage scale
-    u8g2.setCursor(0,48);
-    u8g2.print("V1:");u8g2.print(scale.CH1Scale/1000);//CH1 scale
-    u8g2.setCursor(30,48);
-    u8g2.print("V2:");u8g2.print(scale.CH2Scale/1000);//CH2 scale
 
     //display trigger settings if enabled
     if(triggerSettings.enable){

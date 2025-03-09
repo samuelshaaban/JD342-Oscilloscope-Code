@@ -26,7 +26,7 @@ class Buffer {
 
 struct DisplayAdjust {
   int timeScale,           // Width of screen (1 - 10,000 us)
-      CH1Scale, CH2Scale,  // Height of screen (1 - 40,000 mV)
+      CH1Scale, CH2Scale,  // Half of height of screen (1 - 20,000 mV)
       CH1Shift, CH2Shift;  // Vertical shift of screen (-20,000 - 20,000 mV)
   
   DisplayAdjust();

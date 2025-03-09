@@ -69,10 +69,10 @@ bool updateEncoder(DisplayAdjust &display, Trigger &trigger) {
   } else { // CH voltage settings
     if(CH2) {
       if(shift) updateInt(display.CH2Shift, -20000, 20000, encoderChange);
-      else      updateInt(display.CH2Scale, 1, 40000, encoderChange);
+      else      updateInt(display.CH2Scale, 1, 20000, encoderChange);
     } else { // CH1
       if(shift) updateInt(display.CH1Shift, -20000, 20000, encoderChange);
-      else      updateInt(display.CH1Scale, 1, 40000, encoderChange);
+      else      updateInt(display.CH1Scale, 1, 20000, encoderChange);
     }
   }
 

@@ -6,13 +6,14 @@
 #include <U8g2lib.h>
 
 // Define SPI Pins(adjust numbers...)
-#define LCD_CL 18 
-#define LCD_DATA 23 
-#define LCD_RST 4
-#define LCD_DC 2
+#define LCD_CLK 18  //Clock
+#define LCD_DATA 23 //Data
+#define LCD_RST 4 //Reset
+#define LCD_DC 2 //Data/Command
+#define LCD_CS 5 //chip select
 
 // Initialize ST7565 Display
-U8G2_ST7565_NHD_C12864_F_3W_SW_SPI u8g2(U8G2_R0, LCD_CL, LCD_DATA, LCD_DC, LCD_RST);
+U8G2_ST7565_NHD_C12864_F_3W_SW_SPI u8g2(U8G2_R0, LCD_CLK, LCD_DATA, LCD_CS, LCD_DC, LCD_RST);
 
 // initilization for graphics function
 void initGraphics() {

@@ -4,6 +4,7 @@
 #include "DataTypes.h"
 #include <Arduino.h>
 #include <U8g2lib.h>
+#include <SPI.h>
 
 // Define SPI Pins(adjust numbers...)
 #define LCD_CLK 18  //Clock

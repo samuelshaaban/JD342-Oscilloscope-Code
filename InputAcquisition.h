@@ -60,14 +60,12 @@ bool updateEncoder(DisplayAdjust &display, Trigger &trigger) {
   if(digitalRead(ENCODER_COARSE) == LOW) encoderChange *= 100; // Read switch for 100x
 
   // Read switches to determine what to change
-  bool CH2 = digitalRead(ENCODER_CH) == LOW,
-       shift = digitalRead(ENCODER_SCALE_SHIFT) == LOW,
-       timeTrigger = digitalRead(ENCODER_TIME_TRIGGER) == LOW;
-  if(timeTrigger) {
+  bool shift = digitalRead(ENCODER_SCALE_SHIFT) == LOW;
+  if(digitalRead(ENCODER_TIME_TRIGGER) == LOW) {
     if(shift) updateInt(trigger.val, -20000, 20000, encoderChange);
     else      updateInt(display.timeScale, 1, 10000, encoderChange);
   } else { // CH voltage settings
-    if(CH2) {
+    if(digitalRead(ENCODER_CH) == LOW) {
       if(shift) updateInt(display.CH2Shift, -20000, 20000, encoderChange);
       else      updateInt(display.CH2Scale, 1, 20000, encoderChange);
     } else { // CH1

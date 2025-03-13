@@ -6,12 +6,12 @@
 #define BUFFER_LEN 5000
 class Buffer {
   private:
-    bool enable, change;
+    bool enable, change, increasing;
 
     int time[BUFFER_LEN]; // microseconds
     float volt[BUFFER_LEN];
 
-    unsigned int lastSample, lastPeak;
+    unsigned int min, max, lastSample, lastPeriod;
 
   public:
     Buffer();
@@ -19,7 +19,7 @@ class Buffer {
     void insert(uint16_t adcOut);
 
     bool enabled();
-    bool changed();
+    bool changed(); // Disables on check
     float get(int us); // Time since beginning of most recent wave
 
 };
@@ -44,17 +44,35 @@ struct Trigger {
 
 // Implementations
 
-Buffer::Buffer(): enable(false), change(false), time(), volt(), lastSample(0), lastPeak(0) {}
+Buffer::Buffer(): enable(false), change(false), increasing(false),
+  time(), volt(), lastSample(0), lastPeriod(0) {}
+
 void Buffer::setEnable(bool enable) { this->enable = enable; }
 bool Buffer::enabled() { return this->enable; }
 bool Buffer::changed() { return this->change; }
 
 void Buffer::insert(uint16_t adcOut) {
+  unsigned int lastLastSample = lastSample;
   lastSample = (lastSample + 1) % BUFFER_LEN;
   time[lastSample] = micros();
   volt[lastSample] = ((float)adcOut - 1.5) * 20;
 
-  // Set change
+  // Update min/max if derivative flips
+  bool increase = volt[lastSample] - volt[lastLastSample] > 0;
+  if(increase != increasing) {
+    if(increasing) max = lastSample;
+    else min = lastSample;
+
+    increasing = increase;
+  }
+
+  // Update lastPeriod if a 3/4 period has passed and crossed 0
+  if(time[lastSample] - time[lastPeriod] > abs(time[min] - time[max]) * 1.5) { // 3/4 of a period has passed
+    if(volt[lastSample] > 0 != volt[lastLastSample] > 0) { // If last sample crossed 0
+      lastPeriod = lastSample;
+      change = true;
+    }
+  }
 }
 
 float Buffer::get(int us) {

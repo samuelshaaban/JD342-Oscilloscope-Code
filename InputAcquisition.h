@@ -6,20 +6,20 @@
 
 
 // Toggle switches
-#define ENABLE_CH1 14
-#define ENABLE_CH2 15
-#define TRIGGER_ENABLE 16
-#define TRIGGER_DECREASE 17
-#define TRIGGER_CH2 18
+#define ENABLE_CH1 9
+#define ENABLE_CH2 12
+#define TRIGGER_ENABLE 13
+#define TRIGGER_DECREASE 14
+#define TRIGGER_CH2 22
 
 // Rotary encoder
-#define ENCODER_CH 19 // Selects channel
-#define ENCODER_SCALE_SHIFT 20 // Selects scale or shift
-#define ENCODER_TIME_TRIGGER 21 // Off -> default, on -> scale=time, shift=trigger, CH ignored
+#define ENCODER_CH 23 // Selects channel
+#define ENCODER_SCALE_SHIFT 25 // Selects scale or shift
+#define ENCODER_TIME_TRIGGER 26 // Off -> default, on -> scale=time, shift=trigger, CH ignored
 #define ENCODER_COARSE 27// ON = 100x encoder speed
 // Attached to interrupts, pins must support
-#define ENCODER_A 22
-#define ENCODER_B 23
+#define ENCODER_A 1
+#define ENCODER_B 3
 
 
 // First pulse every sample cycle sets direction, other channel will pulse while the first is still on

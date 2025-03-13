@@ -19,21 +19,21 @@
 
 
 // ADC control pins
-#define CS 1 // held high during register programming, held low to send STROBE to CONVST when looping
-#define SCLK 2
-#define SDI 3
-#define CONVST 4
-#define READY_STROBE 5
+#define CS 19
+#define SCLK 5
+#define SDI 18
+#define CONVST 21
+#define READY_STROBE 6
 
 // ADC data out bus
-#define SDO0A 6
-#define SDO1A 7
-#define SDO2A 8
-#define SDO3A 9
-#define SDO0B 10
-#define SDO1B 11
-#define SDO2B 12
-#define SDO3B 13
+#define SDO0A 7
+#define SDO1A 8
+#define SDO2A 15
+#define SDO3A 2
+#define SDO0B 0
+#define SDO1B 4
+#define SDO2B 16
+#define SDO3B 17
 
 
 void initADCPins() {

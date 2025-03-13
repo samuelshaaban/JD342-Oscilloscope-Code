@@ -106,7 +106,7 @@ bool updateBool(bool &dst, bool src) {
 void updateTrigger(Trigger &trigger) {
   updateBool(trigger.enable, digitalRead(TRIGGER_ENABLE) == LOW);
   updateBool(trigger.decrease, digitalRead(TRIGGER_DECREASE) == LOW);
-  updateBool(trigger.CH2, digitalRead(TRIGGER_CH2));
+  updateBool(trigger.CH2, digitalRead(TRIGGER_CH2) == LOW);
 }
 
 

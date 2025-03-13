@@ -17,7 +17,7 @@ U8G2_ST7565_NHD_C12864_F_4W_SW_SPI u8g2(U8G2_R0, LCD_CLK, LCD_DATA, LCD_CS, LCD_
 
 // initilization for graphics function
 void initGraphics() {
-    SPI.begin(PIN_SCK, -1, PIN_DATA, PIN_CS);  // Custom SPI pin mapping
+    SPI.begin(LCD_SCK, -1, LCD_DATA, LCD_CS);  // Custom SPI pin mapping
     u8g2.begin();
     u8g2.setFont(u8g2_font_5x8_tf);//set font size to 5x8 (6x8 including spaces)
 }

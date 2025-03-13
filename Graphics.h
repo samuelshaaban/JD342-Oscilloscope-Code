@@ -13,7 +13,7 @@
 #define LCD_CS 5 //chip select
 
 // Initialize ST7565 Display
-U8G2_ST7565_NHD_C12864_F_4W_HW_SPI u8g2(U8G2_R0, LCD_CLK, LCD_DATA, LCD_CS, LCD_DC, LCD_RST);
+U8G2_ST7565_NHD_C12864_F_4W_SW_SPI u8g2(U8G2_R0, LCD_CLK, LCD_DATA, LCD_CS, LCD_DC, LCD_RST);
 
 // initilization for graphics function
 void initGraphics() {

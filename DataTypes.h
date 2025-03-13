@@ -44,7 +44,7 @@ struct Trigger {
 
 // Implementations
 
-Buffer::Buffer(): enable(false), change(false), increasing(false),
+Buffer::Buffer(): enable(false), increasing(false),
   time(), volt(), lastSample(0), lastPeriod(0) {}
 
 void Buffer::setEnable(bool enable) { this->enable = enable; }
@@ -67,10 +67,8 @@ void Buffer::insert(uint16_t adcOut) {
 
   // Update lastPeriod if a 3/4 period has passed and crossed 0
   if(time[lastSample] - time[lastPeriod] > abs(time[min] - time[max]) * 1.5) { // 3/4 of a period has passed
-    if(volt[lastSample] > 0 != volt[lastLastSample] > 0) { // If last sample crossed 0
+    if(volt[lastSample] > 0 != volt[lastLastSample] > 0) // If last sample crossed 0
       lastPeriod = lastSample;
-      change = true;
-    }
   }
 }
 

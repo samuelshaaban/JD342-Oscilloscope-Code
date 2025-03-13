@@ -16,9 +16,9 @@ void setup() {
 }
 
 void loop() {
-  if(acquireInput(CH1, CH2, display, trigger))
-    if (millis() - lastUpdate >= frameInterval) {
-      updateGraphics(CH1, CH2, display, trigger);
-      lastUpdate = millis();
-    }
+  acquireInput(CH1, CH2, display, trigger)
+  if (millis() - lastUpdate >= frameInterval) {
+    updateGraphics(CH1, CH2, display, trigger);
+    lastUpdate = millis();
+  }
 }

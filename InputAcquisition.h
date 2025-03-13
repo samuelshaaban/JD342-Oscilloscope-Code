@@ -55,8 +55,8 @@ void updateInt(int &dst, int min, int max, int change) {
 }
 
 // uses encoderChange count
-bool updateEncoder(DisplayAdjust &display, Trigger &trigger) {
-  if(encoderChange == 0) return false;
+void updateEncoder(DisplayAdjust &display, Trigger &trigger) {
+  if(encoderChange == 0) return;
   if(digitalRead(ENCODER_COARSE) == LOW) encoderChange *= 100; // Read switch for 100x
 
   // Read switches to determine what to change
@@ -75,7 +75,6 @@ bool updateEncoder(DisplayAdjust &display, Trigger &trigger) {
   }
 
   encoderChange = 0;
-  return true;
 }
 
 
@@ -104,10 +103,10 @@ bool updateBool(bool &dst, bool src) {
   return true;
 }
 
-bool updateTrigger(Trigger &trigger) {
-  return updateBool(trigger.enable, digitalRead(TRIGGER_ENABLE) == LOW) ||
-         updateBool(trigger.decrease, digitalRead(TRIGGER_DECREASE) == LOW) ||
-         updateBool(trigger.CH2, digitalRead(TRIGGER_CH2));
+void updateTrigger(Trigger &trigger) {
+  updateBool(trigger.enable, digitalRead(TRIGGER_ENABLE) == LOW);
+  updateBool(trigger.decrease, digitalRead(TRIGGER_DECREASE) == LOW);
+  updateBool(trigger.CH2, digitalRead(TRIGGER_CH2));
 }
 
 
@@ -119,16 +118,14 @@ void initInput() {
   initADCRegisters();
 }
 
-bool acquireInput(Buffer &CH1, Buffer &CH2, DisplayAdjust &display, Trigger &trigger) {
+void acquireInput(Buffer &CH1, Buffer &CH2, DisplayAdjust &display, Trigger &trigger) {
   // Check channel enable switches and get a reading from the ADC
   CH1.setEnable(digitalRead(ENABLE_CH1 == LOW));
   CH2.setEnable(digitalRead(ENABLE_CH2 == LOW));
   CRTRead(CH1, CH2);
 
-  return updateEncoder(display, trigger) ||
-         updateTrigger(trigger) ||
-         CH1.changed() ||
-         CH2.changed();
+  updateEncoder(display, trigger);
+  updateTrigger(trigger);
 }
 
 #endif

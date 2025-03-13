@@ -6,7 +6,7 @@
 #define BUFFER_LEN 5000
 class Buffer {
   private:
-    bool enable, change, increasing;
+    bool enable, increasing;
 
     int time[BUFFER_LEN]; // microseconds
     float volt[BUFFER_LEN];
@@ -49,7 +49,6 @@ Buffer::Buffer(): enable(false), change(false), increasing(false),
 
 void Buffer::setEnable(bool enable) { this->enable = enable; }
 bool Buffer::enabled() { return this->enable; }
-bool Buffer::changed() { return this->change; }
 
 void Buffer::insert(uint16_t adcOut) {
   unsigned int lastLastSample = lastSample;
